@@ -1,0 +1,49 @@
+services:
+  app:
+    container_name: gestion
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./gestion-zonas:/app
+    depends_on:
+      - mongodb
+      - mysql
+    environment:
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_USER=userTest
+      - MONGO_PASSWORD=admin123
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=admin123
+    networks:
+      - red_demo_nest
+  mongodb:
+    image: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=userTest
+      - MONGO_INITDB_ROOT_PASSWORD=admin123
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - red_demo_nest
+  mysql:
+    image: mysql:8.4.4
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=admin123
+    volumes:
+      - mysql_data:/var/lib/sql
+    networks:
+      - red_demo_nest
+  
+volumes:
+    mongo_data:
+    mysql_data:
+networks:
+    red_demo_nest:
