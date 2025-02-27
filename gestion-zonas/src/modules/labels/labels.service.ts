@@ -4,12 +4,14 @@ import { Repository } from 'typeorm';
 import { Label } from './entities/label.entity';
 import { CreateLabelDto } from './dto/create-label.dto';
 import { UpdateLabelDto } from './dto/update-label.dto';
+import { ChangeHistoryService } from '../changeHistory/changeHistory.service';
 
 @Injectable()
 export class LabelsService {
     constructor(
         @InjectRepository(Label)
         private readonly labelRepository: Repository<Label>,
+        private readonly changeHistoryService: ChangeHistoryService
     ) { }
 
     /**
@@ -19,6 +21,7 @@ export class LabelsService {
     */
     async create(createLabelDto: CreateLabelDto): Promise<Label> {
         const newLabel = this.labelRepository.create(createLabelDto);
+        await this.changesSave('creación de etiqueta');
         return await this.labelRepository.save(newLabel);
     }
 
@@ -54,6 +57,7 @@ export class LabelsService {
         if (!label) {
             throw new NotFoundException(`La etiqueta con ID ${id} no existe`);
         }
+        await this.changesSave('actualización de etiqueta');
         const updatedLabel = Object.assign(label, updateLabelDto);
         return await this.labelRepository.save(updatedLabel);
     }
@@ -67,6 +71,20 @@ export class LabelsService {
         if (!label) {
             throw new NotFoundException(`La etiqueta con ID ${id} no existe`);
         }
+        await this.changesSave('eliminación de etiqueta');
         await this.labelRepository.remove(label);
+    }
+
+    /**
+   * guarda los cambios en la base de datos implementando el servicio de changeHistory
+   * @param reason 
+   * @returns 
+   */
+    changesSave(reason: string) {
+        return this.changeHistoryService.create({
+            placeId: 1,
+            changes: { category: 'Label' },
+            reason
+        });
     }
 }

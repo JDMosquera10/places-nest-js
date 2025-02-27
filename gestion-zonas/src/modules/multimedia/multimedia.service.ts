@@ -5,6 +5,7 @@ import { Multimedia } from './entities/multimedia.entity';
 import { CreateMultimediaDto } from './dto/create-multimedia.dto';
 import { UpdateMultimediaDto } from './dto/update-multimedia.dto';
 import { Place } from '../places/entities/place.entity';
+import { ChangeHistoryService } from '../changeHistory/changeHistory.service';
 
 @Injectable()
 export class MultimediasService {
@@ -12,7 +13,8 @@ export class MultimediasService {
         @InjectRepository(Multimedia)
         private readonly multimediaRepository: Repository<Multimedia>,
         @InjectRepository(Place)
-        private readonly placeRepository: Repository<Place>
+        private readonly placeRepository: Repository<Place>,
+        private readonly changeHistoryService: ChangeHistoryService
     ) { }
 
     /**
@@ -24,13 +26,17 @@ export class MultimediasService {
         const place = await this.placeRepository.findOne({ where: { id: createMultimediaDto.place_id } });
 
         if (!place) {
-            throw new Error('place not found');
+            throw new NotFoundException(`El lugar que estas buscando no existe`);
         }
+
 
         const newMultimedia = this.multimediaRepository.create({
             ...createMultimediaDto,
             place_id: place,
         });
+
+        await this.changesSave('creación de la multimedia');
+
         return await this.multimediaRepository.save(newMultimedia);
     }
 
@@ -73,6 +79,8 @@ export class MultimediasService {
             throw new Error('place not found');
         }
         const updatedMultimedia = Object.assign(multimedia, updateMultimediaDto);
+        await this.changesSave('actualización de multimedia');
+
         return await this.multimediaRepository.save(updatedMultimedia);
     }
 
@@ -85,7 +93,20 @@ export class MultimediasService {
         if (!multimedia) {
             throw new NotFoundException(`La multimedia con ID ${id} no existe`);
         }
+        await this.changesSave('eliminación de multimedia');
         await this.multimediaRepository.remove(multimedia);
     }
 
+    /**
+    * guarda los cambios en la base de datos implementando el servicio de changeHistory
+    * @param reason 
+    * @returns 
+    */
+    changesSave(reason: string) {
+        return this.changeHistoryService.create({
+            placeId: 1,
+            changes: { category: 'Place' },
+            reason
+        });
+    }
 }

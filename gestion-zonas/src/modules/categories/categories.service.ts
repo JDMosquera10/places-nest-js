@@ -4,12 +4,14 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { ChangeHistoryService } from '../changeHistory/changeHistory.service';
 
 @Injectable()
 export class CategoriesService {
     constructor(
         @InjectRepository(Category)
         private readonly categoryRepository: Repository<Category>,
+        private readonly changeHistoryService: ChangeHistoryService
     ) { }
 
     /**
@@ -19,6 +21,7 @@ export class CategoriesService {
      */
     async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
         const newCategory = this.categoryRepository.create(createCategoryDto);
+        await this.changesSave('creación de categoria');
         return await this.categoryRepository.save(newCategory);
     }
 
@@ -54,6 +57,8 @@ export class CategoriesService {
         if (!category) {
             throw new NotFoundException(`La cateogria con ID ${id} no existe`);
         }
+        await this.changesSave('actualización de categoria');
+
         const updatedCategory = Object.assign(category, updateCategoryDto);
         return await this.categoryRepository.save(updatedCategory);
     }
@@ -67,6 +72,20 @@ export class CategoriesService {
         if (!category) {
             throw new NotFoundException(`La cateogria con ID ${id} no existe`);
         }
+        await this.changesSave('eliminación de categoria');
         await this.categoryRepository.remove(category);
+    }
+
+    /**
+   * guarda los cambios en la base de datos implementando el servicio de changeHistory
+   * @param reason 
+   * @returns 
+   */
+    changesSave(reason: string) {
+        return this.changeHistoryService.create({
+            placeId: 1,
+            changes: { category: 'category' },
+            reason
+        });
     }
 }

@@ -7,6 +7,7 @@ import { UpdatePlaceDto } from './dto/update-place.dto';
 import { Label } from '../labels/entities/label.entity';
 import { LabelPlace } from './entities/label-place';
 import { Category } from '../categories/entities/category.entity';
+import { ChangeHistoryService } from '../changeHistory/changeHistory.service';
 
 @Injectable()
 export class PlacesService {
@@ -18,7 +19,9 @@ export class PlacesService {
         @InjectRepository(LabelPlace)
         private readonly labelPlaceRepository: Repository<LabelPlace>,
         @InjectRepository(Category)
-        private readonly categoryRepository: Repository<Category>
+        private readonly categoryRepository: Repository<Category>,
+        private readonly changeHistoryService: ChangeHistoryService
+
     ) { }
 
     /**
@@ -32,6 +35,7 @@ export class PlacesService {
         if (!category) {
             throw new Error('Category not found');
         }
+        await this.changesSave('creación de lugar');
 
         const newPlace = this.placeRepository.create({
             ...createPlaceDto,
@@ -80,7 +84,7 @@ export class PlacesService {
         if (!place) {
             throw new NotFoundException(`El lugar con ID ${id} no existe`);
         }
-
+        await this.changesSave('actualizacion de lugar');
         const updatedPlace = Object.assign(place, updatePlaceDto);
         return await this.placeRepository.save(updatedPlace);
     }
@@ -91,6 +95,10 @@ export class PlacesService {
      */
     async remove(id: number): Promise<void> {
         const place = await this.findOne(id);
+        if (!place) {
+            throw new NotFoundException(`El lugar con ID ${id} no existe`);
+        }
+        await this.changesSave('eliminación de lugar');
         await this.placeRepository.remove(place);
     }
 
@@ -108,5 +116,18 @@ export class PlacesService {
 
         const labelPlace = this.labelPlaceRepository.create({ place, label });
         return this.labelPlaceRepository.save(labelPlace);
+    }
+
+    /**
+     * guarda los cambios en la base de datos implementando el servicio de changeHistory
+     * @param reason 
+     * @returns 
+     */
+    changesSave(reason: string) {
+        return this.changeHistoryService.create({
+            placeId: 1,
+            changes: { category: 'Place' },
+            reason
+        });
     }
 }

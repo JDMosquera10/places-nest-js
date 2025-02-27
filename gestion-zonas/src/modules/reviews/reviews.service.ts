@@ -3,10 +3,17 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Review } from './schema/review.schema';
 import { UpdateReviewDto } from './dto/updateReview.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Place } from '../places/entities/place.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class ReviewService {
-  constructor(@InjectModel(Review.name) private reviewModel: Model<Review>) { }
+  constructor(
+    @InjectModel(Review.name)
+    private reviewModel: Model<Review>,
+    @InjectRepository(Place)
+    private readonly placeRepository: Repository<Place>) { }
 
   /**
    * metodo encargado de crear una reseña de un lugar en especifico
@@ -16,6 +23,11 @@ export class ReviewService {
   async create(reviewData: Partial<Review>): Promise<Review> {
     if ((reviewData?.rating || 0) > 5 || (reviewData?.rating || 0) < 0) {
       throw new BadRequestException(`La calificación permitida va desde 0 hasta 5`);
+    }
+    // Verifica si el lugar existe
+    const place = await this.placeRepository.findOne({ where: { id: reviewData.placeId } });
+    if (!place) {
+      throw new NotFoundException(`El lugar que estas buscando no existe`);
     }
     return new this.reviewModel(reviewData).save();
   }
@@ -28,7 +40,7 @@ export class ReviewService {
   async findAllByPlace(placeId: string): Promise<Review[]> {
     return this.reviewModel.find({ placeId }).exec();
   }
-  
+
   /**
    * Actualiza un historial de cambios por su ID
    * @param id 
@@ -36,11 +48,19 @@ export class ReviewService {
    * @returns {Promise<QuestionAnswer>}
    */
   async update(id: string, updateData: UpdateReviewDto): Promise<Review> {
+    if ((updateData?.rating || 0) > 5 || (updateData?.rating || 0) < 0) {
+      throw new BadRequestException(`La calificación permitida va desde 0 hasta 5`);
+    }
+     // Verifica si el lugar existe
+     const place = await this.placeRepository.findOne({ where: { id: updateData.placeId } });
+     if (!place) {
+       throw new NotFoundException(`El lugar que estas buscando no existe`);
+     }
     const updatedChangeHistory = await this.reviewModel
       .findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
       .exec();
     if (!updatedChangeHistory) {
-      throw new NotFoundException(`pregunta con ID ${id} no encontrada`);
+      throw new NotFoundException(`reseña con ID ${id} no encontrada`);
     }
     return updatedChangeHistory;
   }
@@ -53,8 +73,8 @@ export class ReviewService {
   async delete(id: string): Promise<{ message: string }> {
     const result = await this.reviewModel.findByIdAndDelete(id).exec();
     if (!result) {
-      throw new NotFoundException(`la pregunta con ID ${id} no encontrada`);
+      throw new NotFoundException(`La reseña con ID ${id} no encontrada`);
     }
-    return { message: `pregunta con ID ${id} eliminada correctamente` };
+    return { message: `reseña con ID ${id} eliminada correctamente` };
   }
 }
