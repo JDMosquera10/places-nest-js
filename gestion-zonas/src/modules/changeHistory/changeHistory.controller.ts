@@ -5,10 +5,19 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ChangeHistory } from './schema/changeHistory.schema';
 import { UpdateChangeHistoryDto } from './dto/updarteChangeHistory.dto';
 
+/**
+ * Controlador que maneja las operaciones relacionadas con el historial de cambios.
+ */
 @Controller('changehistorys')
 export class ChangeHistoryController {
   constructor(private readonly changeHistoryService: ChangeHistoryService) { }
 
+   /**
+   * Crea un nuevo registro en el historial de cambios.
+   *
+   * @param changeHistoryData Datos del nuevo registro en el historial de cambios.
+   * @returns Un mensaje indicando que el registro fue creado exitosamente.
+   */
   @Post()
   @ApiOperation({ summary: 'Crear una nueva reseña' })
   @ApiResponse({ status: 201, description: 'Reseña creada exitosamente.' })
@@ -16,6 +25,12 @@ export class ChangeHistoryController {
     return this.changeHistoryService.create(changeHistoryData);
   }
 
+  /**
+   * Obtiene el historial de cambios para un lugar específico.
+   *
+   * @param placeId Identificador del lugar para el cual se desea obtener el historial de cambios.
+   * @returns El historial de cambios para el lugar especificado.
+   */
   @Get(':placeId')
   @ApiOperation({ summary: 'Crear una nueva reseña' })
   @ApiResponse({ status: 201, description: 'Reseña creada exitosamente.' })
