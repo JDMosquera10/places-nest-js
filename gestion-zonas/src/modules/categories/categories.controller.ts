@@ -5,10 +5,16 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Category } from './entities/category.entity';
 
+/**
+ * Controlador para gestionar las operaciones de categorías.
+ */
 @Controller('categories')
 export class CategoriesController {
     constructor(private readonly categoryService: CategoriesService) { }
 
+    /**
+     * Crea una nueva categoría.
+     */
     @Post()
     @ApiOperation({ summary: 'Crear una nueva categoria' })
     @ApiResponse({ status: 201, description: 'Categoria creada correctamente.', type: Category })
@@ -16,6 +22,9 @@ export class CategoriesController {
         return this.categoryService.create(createPlaceDto);
     }
 
+    /**
+     * Obtiene todas las categorías.
+     */
     @Get()
     @ApiOperation({ summary: 'Obtener todas las categorias' })
     @ApiResponse({ status: 200, description: 'Lista de categorias.', type: [Category] })
@@ -23,6 +32,9 @@ export class CategoriesController {
         return this.categoryService.findAll();
     }
 
+    /**
+     * Obtiene una categoría por su ID.
+     */
     @Get(':id')
     @ApiOperation({ summary: 'Obtener una categoria por ID' })
     @ApiResponse({ status: 200, description: 'Categoria encontrada.', type: Category })
@@ -31,6 +43,9 @@ export class CategoriesController {
         return this.categoryService.findOne(+id);
     }
 
+    /**
+     * Actualiza una categoría por su ID.
+     */
     @Patch(':id')
     @ApiOperation({ summary: 'Actualizar una categoria por ID' })
     @ApiResponse({ status: 200, description: 'Categoria actualizada.', type: Category })
@@ -39,6 +54,9 @@ export class CategoriesController {
         return this.categoryService.update(+id, updatePlaceDto);
     }
 
+    /**
+     * Elimina una categoría por su ID.
+     */
     @Delete(':id')
     @ApiOperation({ summary: 'Eliminar una categoria por ID' })
     @ApiResponse({ status: 200, description: 'Categoria eliminada.' })

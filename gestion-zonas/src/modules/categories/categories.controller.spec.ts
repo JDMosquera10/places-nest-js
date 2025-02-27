@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CategoriesController } from './categories.controller';
 
+/**
+ * Pruebas unitarias para el controlador de categorías.
+ */
 describe('CategoriesController', () => {
   let controller: CategoriesController;
 
@@ -8,7 +11,10 @@ describe('CategoriesController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CategoriesController],
     }).compile();
-
+    
+  /**
+   * Verifica que el controlador esté definido.
+   */
     controller = module.get<CategoriesController>(CategoriesController);
   });
 

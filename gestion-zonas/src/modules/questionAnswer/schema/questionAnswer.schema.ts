@@ -1,6 +1,9 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
+/**
+ * Esquema que representa una pregunta y sus respuestas.
+ */
 @Schema({ timestamps: true })
 export class QuestionAnswer extends Document {
   @Prop({ required: true })
