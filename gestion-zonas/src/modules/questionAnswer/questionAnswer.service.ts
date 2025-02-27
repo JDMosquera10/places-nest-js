@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { QuestionAnswer } from './schema/questionAnswer.schema';
 import { CreateQuestionAnswerDto } from './dto/questionAnswer.dto';
 import { ResponseQuestionDto } from './dto/responseQuestion.dto';
+import { UpdateQuestionAnswerDto } from './dto/updateQuestionAnswer.dto';
 
 @Injectable()
 export class QuestionAnswerService {
@@ -52,4 +53,33 @@ export class QuestionAnswerService {
 
     return updatedQuestion;
   }
+  
+    /**
+     * Actualiza un historial de cambios por su ID
+     * @param id 
+     * @param updateData 
+     * @returns {Promise<QuestionAnswer>}
+     */
+    async update(id: string, updateData: UpdateQuestionAnswerDto): Promise<QuestionAnswer> {
+      const updatedChangeHistory = await this.questionanswerModel
+        .findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+        .exec();
+      if (!updatedChangeHistory) {
+        throw new NotFoundException(`pregunta con ID ${id} no encontrada`);
+      }
+      return updatedChangeHistory;
+    }
+  
+    /**
+     * Elimina un historial de cambios por su ID
+     * @param id 
+     * @returns {Promise<{ message: string }>}
+     */
+    async delete(id: string): Promise<{ message: string }> {
+      const result = await this.questionanswerModel.findByIdAndDelete(id).exec();
+      if (!result) {
+        throw new NotFoundException(`la pregunta con ID ${id} no encontrada`);
+      }
+      return { message: `pregunta con ID ${id} eliminada correctamente` };
+    }
 }

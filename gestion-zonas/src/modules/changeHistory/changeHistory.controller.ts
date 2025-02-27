@@ -1,23 +1,51 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
 import { ChangeHistoryService } from './changeHistory.service';
 import { CreateChangeHistoryDto } from './dto/changeHistory.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ChangeHistory } from './schema/changeHistory.schema';
+import { UpdateChangeHistoryDto } from './dto/updarteChangeHistory.dto';
 
 @Controller('changehistorys')
 export class ChangeHistoryController {
-  constructor(private readonly changehistoryService: ChangeHistoryService) { }
+  constructor(private readonly changeHistoryService: ChangeHistoryService) { }
 
   @Post()
   @ApiOperation({ summary: 'Crear una nueva reseña' })
   @ApiResponse({ status: 201, description: 'Reseña creada exitosamente.' })
   async create(@Body() changeHistoryData: CreateChangeHistoryDto) {
-    return this.changehistoryService.create(changeHistoryData);
+    return this.changeHistoryService.create(changeHistoryData);
   }
 
   @Get(':placeId')
   @ApiOperation({ summary: 'Crear una nueva reseña' })
   @ApiResponse({ status: 201, description: 'Reseña creada exitosamente.' })
   async getChangeHistorys(@Param('placeId') placeId: string) {
-    return this.changehistoryService.findAllByPlace(placeId);
+    return this.changeHistoryService.findAllByPlace(placeId);
+  }
+
+  /**
+   * Actualiza un historial de cambios por su ID
+   * @param id 
+   * @param updateChangeHistoryDto 
+   * @returns {Promise<ChangeHistory>}
+   */
+  @Patch(':id')
+  @ApiOperation({ summary: 'Crear una nueva reseña' })
+  @ApiResponse({ status: 201, description: 'Reseña creada exitosamente.' })
+  async update(
+    @Param('id') id: string,
+    @Body() updateChangeHistoryDto: UpdateChangeHistoryDto,
+  ): Promise<ChangeHistory> {
+    return this.changeHistoryService.update(id, updateChangeHistoryDto);
+  }
+
+  /**
+   * Elimina un historial de cambios por su ID
+   * @param id 
+   * @returns {Promise<{ message: string }>}
+   */
+  @Delete(':id')
+  async delete(@Param('id') id: string): Promise<{ message: string }> {
+    return this.changeHistoryService.delete(id);
   }
 }

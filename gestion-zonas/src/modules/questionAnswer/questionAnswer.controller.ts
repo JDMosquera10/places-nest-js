@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
 import { QuestionAnswer } from './schema/questionAnswer.schema';
 import { QuestionAnswerService } from './questionAnswer.service';
 import { CreateQuestionAnswerDto } from './dto/questionAnswer.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ResponseQuestionDto } from './dto/responseQuestion.dto';
+import { UpdateQuestionAnswerDto } from './dto/updateQuestionAnswer.dto';
 
 @Controller('questionanswers')
 export class QuestionAnswerController {
@@ -28,5 +29,31 @@ export class QuestionAnswerController {
   @ApiResponse({ status: 201, description: 'respuesta a la pregunta realizada en un lugar.' })
   async responseAswer(@Body() responseQuestionDto: ResponseQuestionDto) {
     return this.questionanswerService.responseAswer(responseQuestionDto);
+  }
+
+  /**
+   * Actualiza una pregunta por su ID
+   * @param id 
+   * @param updateChangeHistoryDto 
+   * @returns {Promise<ChangeHistory>}
+   */
+  @Patch(':id')
+  @ApiOperation({ summary: 'Editar la pregunta' })
+  @ApiResponse({ status: 201, description: 'pregunta editada exitosamente.' })
+  async update(
+    @Param('id') id: string,
+    @Body() updateChangeHistoryDto: UpdateQuestionAnswerDto,
+  ): Promise<QuestionAnswer> {
+    return this.questionanswerService.update(id, updateChangeHistoryDto);
+  }
+
+  /**
+   * Elimina una pregunta por su ID
+   * @param id 
+   * @returns {Promise<{ message: string }>}
+   */
+  @Delete(':id')
+  async delete(@Param('id') id: string): Promise<{ message: string }> {
+    return this.questionanswerService.delete(id);
   }
 }
