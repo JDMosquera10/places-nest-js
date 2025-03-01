@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { Category } from './entities/category.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,9 +20,14 @@ export class CategoriesService {
      * @returns {Category}
      */
     async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
+        try {
         const newCategory = this.categoryRepository.create(createCategoryDto);
         await this.changesSave('creación de categoria');
         return await this.categoryRepository.save(newCategory);
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado en la creación de la categoría');
+        }
     }
 
     /**
@@ -30,7 +35,12 @@ export class CategoriesService {
     * @returns {Category[]}
     */
     async findAll(): Promise<Category[]> {
+        try {
         return await this.categoryRepository.find();
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al obtener las categorías');
+        }
     }
 
     /**
@@ -39,11 +49,16 @@ export class CategoriesService {
     * @returns {Category}
     */
     async findOne(id: number): Promise<Category> {
+        try {
         const category = await this.categoryRepository.findOne({ where: { id } });
         if (!category) {
             throw new NotFoundException(`La cateogria con ID ${id} no existe`);
         }
         return category;
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al obtener la categoría');
+        }
     }
 
     /**
@@ -53,6 +68,7 @@ export class CategoriesService {
       * @returns {Category}
       */
     async update(id: number, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
+        try {
         const category = await this.findOne(id);
         if (!category) {
             throw new NotFoundException(`La cateogria con ID ${id} no existe`);
@@ -61,6 +77,10 @@ export class CategoriesService {
 
         const updatedCategory = Object.assign(category, updateCategoryDto);
         return await this.categoryRepository.save(updatedCategory);
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al actualizar la categoría');
+        }
     }
 
     /**
@@ -68,12 +88,17 @@ export class CategoriesService {
      * @param id 
      */
     async remove(id: number): Promise<void> {
+        try {
         const category = await this.findOne(id);
         if (!category) {
             throw new NotFoundException(`La cateogria con ID ${id} no existe`);
         }
         await this.changesSave('eliminación de categoria');
         await this.categoryRepository.remove(category);
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al eliminar la categoría');
+        }
     }
 
     /**
@@ -82,10 +107,15 @@ export class CategoriesService {
    * @returns 
    */
     changesSave(reason: string) {
+        try {
         return this.changeHistoryService.create({
             placeId: 1,
             changes: { category: 'category' },
             reason
         });
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al guardar los cambios');
+        }
     }
 }

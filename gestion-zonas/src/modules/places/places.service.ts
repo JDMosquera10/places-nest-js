@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Place } from './entities/place.entity';
@@ -30,6 +30,7 @@ export class PlacesService {
     * @returns {Place}
     */
     async create(createPlaceDto: CreatePlaceDto): Promise<Place> {
+        try {
         const category = await this.categoryRepository.findOne({ where: { id: createPlaceDto.category_id } });
 
         if (!category) {
@@ -43,6 +44,10 @@ export class PlacesService {
         });
 
         return await this.placeRepository.save(newPlace);
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al crear el lugar');
+        }
     }
 
     /**
@@ -50,7 +55,12 @@ export class PlacesService {
 * @returns {Place[]}
 */
     async findAll(): Promise<Place[]> {
+        try {
         return await this.placeRepository.find();
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al obtener los lugares');
+        }
     }
 
     /**
@@ -59,11 +69,16 @@ export class PlacesService {
   * @returns {Place}
   */
     async findOne(id: number): Promise<Place> {
+        try {
         const place = await this.placeRepository.findOne({ where: { id } });
         if (!place) {
             throw new NotFoundException(`El lugar con ID ${id} no existe`);
         }
         return place;
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al obtener el lugar');
+        }
     }
 
     /**
@@ -73,6 +88,7 @@ export class PlacesService {
     * @returns {Place}
     */
     async update(id: number, updatePlaceDto: UpdatePlaceDto): Promise<Place> {
+        try {
         const place = await this.findOne(id);
         // buscar la categoria
         const category = await this.categoryRepository.findOne({ where: { id: updatePlaceDto.category_id } });
@@ -87,6 +103,10 @@ export class PlacesService {
         await this.changesSave('actualizacion de lugar');
         const updatedPlace = Object.assign(place, updatePlaceDto);
         return await this.placeRepository.save(updatedPlace);
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al actualizar el lugar');
+        }
     }
 
     /**
@@ -94,12 +114,17 @@ export class PlacesService {
      * @param id 
      */
     async remove(id: number): Promise<void> {
+        try {
         const place = await this.findOne(id);
         if (!place) {
             throw new NotFoundException(`El lugar con ID ${id} no existe`);
         }
         await this.changesSave('eliminación de lugar');
         await this.placeRepository.remove(place);
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al eliminar el lugar');
+        }
     }
 
     /**
@@ -108,6 +133,7 @@ export class PlacesService {
     * @param labelId 
     */
     async addLabelToPlace(placeId: number, labelId: number) {
+        try {
         const place = await this.placeRepository.findOne({ where: { id: placeId } });
         const label = await this.labelRepository.findOne({ where: { id: labelId } });
         if (!place || !label) {
@@ -116,6 +142,10 @@ export class PlacesService {
 
         const labelPlace = this.labelPlaceRepository.create({ place, label });
         return this.labelPlaceRepository.save(labelPlace);
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al asociar la etiqueta al lugar');
+        }
     }
 
     /**
@@ -124,10 +154,15 @@ export class PlacesService {
      * @returns 
      */
     changesSave(reason: string) {
+        try {
         return this.changeHistoryService.create({
             placeId: 1,
             changes: { category: 'Place' },
             reason
         });
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al guardar los cambios');
+        }
     }
 }

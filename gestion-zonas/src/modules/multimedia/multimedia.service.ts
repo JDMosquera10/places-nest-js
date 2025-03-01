@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Multimedia } from './entities/multimedia.entity';
@@ -23,6 +23,7 @@ export class MultimediasService {
      * @returns {Multimedia}
      */
     async create(createMultimediaDto: CreateMultimediaDto): Promise<Multimedia> {
+        try {
         const place = await this.placeRepository.findOne({ where: { id: createMultimediaDto.place_id } });
 
         if (!place) {
@@ -38,6 +39,10 @@ export class MultimediasService {
         await this.changesSave('creación de la multimedia');
 
         return await this.multimediaRepository.save(newMultimedia);
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al crear la multimedia');
+        }
     }
 
     /**
@@ -45,7 +50,12 @@ export class MultimediasService {
     * @returns {Multimedia[]}
     */
     async findAll(): Promise<Multimedia[]> {
+        try {
         return await this.multimediaRepository.find();
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al obtener las multimedias');
+        }
     }
 
     /**
@@ -54,11 +64,16 @@ export class MultimediasService {
    * @returns {Multimedia}
    */
     async findOne(id: number): Promise<Multimedia> {
+        try {
         const multimedia = await this.multimediaRepository.findOne({ where: { id } });
         if (!multimedia) {
             throw new NotFoundException(`La multimedia con ID ${id} no existe`);
         }
         return multimedia;
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al obtener la multimedia');
+        }
     }
 
     /**
@@ -68,6 +83,7 @@ export class MultimediasService {
      * @returns {Multimedia}
      */
     async update(id: number, updateMultimediaDto: UpdateMultimediaDto): Promise<Multimedia> {
+        try {
         const multimedia = await this.findOne(id);
         // buscar el lugar
         const place = await this.placeRepository.findOne({ where: { id: updateMultimediaDto.place_id } });
@@ -82,6 +98,10 @@ export class MultimediasService {
         await this.changesSave('actualización de multimedia');
 
         return await this.multimediaRepository.save(updatedMultimedia);
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al actualizar la multimedia');
+        }
     }
 
     /**
@@ -89,12 +109,17 @@ export class MultimediasService {
      * @param id 
      */
     async remove(id: number): Promise<void> {
+        try {
         const multimedia = await this.findOne(id);
         if (!multimedia) {
             throw new NotFoundException(`La multimedia con ID ${id} no existe`);
         }
         await this.changesSave('eliminación de multimedia');
         await this.multimediaRepository.remove(multimedia);
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al eliminar la multimedia');
+        }
     }
 
     /**
@@ -103,10 +128,15 @@ export class MultimediasService {
     * @returns 
     */
     changesSave(reason: string) {
+        try {
         return this.changeHistoryService.create({
             placeId: 1,
             changes: { category: 'Place' },
             reason
         });
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException('Error inesperado al guardar los cambios');
+        }
     }
 }
