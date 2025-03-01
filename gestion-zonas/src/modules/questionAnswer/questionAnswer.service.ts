@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { QuestionAnswer } from './schema/questionAnswer.schema';
@@ -16,7 +16,12 @@ export class QuestionAnswerService {
    * @returns {QuestionAnswer}
    */
   async create(questionanswerData: CreateQuestionAnswerDto): Promise<QuestionAnswer> {
+    try {
     return new this.questionanswerModel(questionanswerData).save();
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Error inesperado al crear la pregunta');
+    }
   }
 
   /**
@@ -25,7 +30,12 @@ export class QuestionAnswerService {
    * @returns {QuestionAnswer[]}
    */
   async findAllByPlace(placeId: string): Promise<QuestionAnswer[]> {
+    try {
     return this.questionanswerModel.find({ placeId }).exec();
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Error inesperado al obtener las preguntas');
+    }
   }
 
 
@@ -35,6 +45,7 @@ export class QuestionAnswerService {
    * @returns {QuestionAnswer}
    */
    async responseAswer(responseQuestionDto: ResponseQuestionDto): Promise<QuestionAnswer> {
+    try {
     const newAnswer = {
       _id: new Types.ObjectId(), // Genera un nuevo ObjectId para la respuesta
       answer: responseQuestionDto.respone,
@@ -52,6 +63,10 @@ export class QuestionAnswerService {
     }
 
     return updatedQuestion;
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Error inesperado al responder la pregunta');
+    }
   }
   
     /**
@@ -61,6 +76,7 @@ export class QuestionAnswerService {
      * @returns {Promise<QuestionAnswer>}
      */
     async update(id: string, updateData: UpdateQuestionAnswerDto): Promise<QuestionAnswer> {
+      try {
       const updatedChangeHistory = await this.questionanswerModel
         .findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
         .exec();
@@ -68,6 +84,10 @@ export class QuestionAnswerService {
         throw new NotFoundException(`pregunta con ID ${id} no encontrada`);
       }
       return updatedChangeHistory;
+      } catch (error) {
+        console.error(error);
+        throw new InternalServerErrorException('Error inesperado al actualizar la pregunta');
+      }
     }
   
     /**
@@ -76,10 +96,15 @@ export class QuestionAnswerService {
      * @returns {Promise<{ message: string }>}
      */
     async delete(id: string): Promise<{ message: string }> {
+      try {
       const result = await this.questionanswerModel.findByIdAndDelete(id).exec();
       if (!result) {
         throw new NotFoundException(`la pregunta con ID ${id} no encontrada`);
       }
       return { message: `pregunta con ID ${id} eliminada correctamente` };
+      } catch (error) {
+        console.error(error);
+        throw new InternalServerErrorException('Error inesperado al eliminar la pregunta');
+      }
     }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ChangeHistory } from './schema/changeHistory.schema';
@@ -15,7 +15,12 @@ export class ChangeHistoryService {
    * @returns {ChangeHistory}
    */
   async create(changehistoryData: CreateChangeHistoryDto): Promise<ChangeHistory> {
+    try {
     return new this.changehistoryModel(changehistoryData).save();
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Error inesperado al crear el historial de cambios');
+    }
   }
 
   /**
@@ -24,7 +29,12 @@ export class ChangeHistoryService {
    * @returns {ChangeHistory[]}
    */
   async findAllByPlace(placeId: string): Promise<ChangeHistory[]> {
+    try {
     return this.changehistoryModel.find({ placeId }).exec();
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Error inesperado al obtener los historiales de cambios');
+    }
   }
 
   /**
@@ -34,6 +44,7 @@ export class ChangeHistoryService {
    * @returns {Promise<ChangeHistory>}
    */
   async update(id: string, updateData: UpdateChangeHistoryDto): Promise<ChangeHistory> {
+    try {
     const updatedChangeHistory = await this.changehistoryModel
       .findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
       .exec();
@@ -41,6 +52,10 @@ export class ChangeHistoryService {
       throw new NotFoundException(`Historial con ID ${id} no encontrado`);
     }
     return updatedChangeHistory;
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Error inesperado al actualizar el historial de cambios');
+    }
   }
 
   /**
@@ -49,10 +64,15 @@ export class ChangeHistoryService {
    * @returns {Promise<{ message: string }>}
    */
   async delete(id: string): Promise<{ message: string }> {
+    try {
     const result = await this.changehistoryModel.findByIdAndDelete(id).exec();
     if (!result) {
       throw new NotFoundException(`Historial con ID ${id} no encontrado`);
     }
     return { message: `Historial con ID ${id} eliminado correctamente` };
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Error inesperado al eliminar el historial de cambios');
+    }
   }
 }
